@@ -344,12 +344,11 @@ public:
                     // mark the points' column index for marking occlusion later
                     segMsg.segmentedCloudColInd[sizeOfSegCloud] = j;
                     // save range info
-                    segMsg.segmentedCloudRange[sizeOfSegCloud] = rangeMat.at<float>(i,j);
-                    // save label info
+                    segMsg.segmentedCloudRange[sizeOfSegCloud]  = rangeMat.at<float>(i,j);
+                    // save seg label
                     segMsg.segmentedCloudLabel[sizeOfSegCloud] = labelMat.at<int>(i,j);
                     // save seg cloud
                     segmentedCloud->push_back(fullCloud->points[j + i*Horizon_SCAN]);
-                    // segmentedCloud->points.back().intensity = labelMat.at<int>(i,j);
                     // size of seg cloud
                     ++sizeOfSegCloud;
                 }
@@ -456,8 +455,7 @@ public:
         // segment is valid, mark these points
         if (feasibleSegment == true){
             ++labelCount;
-            segMsg.segmentedCloudLabelMax = labelCount; // save label count max
-
+            segMsg.segmentedCloudLabelMax = labelCount;
         }else{ // segment is invalid, mark these points
             for (size_t i = 0; i < allPushedIndSize; ++i){
                 labelMat.at<int>(allPushedIndX[i], allPushedIndY[i]) = 999999;

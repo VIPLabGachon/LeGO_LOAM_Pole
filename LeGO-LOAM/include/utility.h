@@ -25,7 +25,7 @@
 
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_datatypes.h>
- 
+  
 #include <vector>
 #include <cmath>
 #include <algorithm>
@@ -44,9 +44,6 @@
 #include <thread>
 #include <mutex>
 
-#include <limits>
-
-
 #define PI 3.14159265
 
 using namespace std;
@@ -58,7 +55,6 @@ extern const string imuTopic = "/imu/data";
 
 // Save pcd
 extern const string fileDirectory = "/tmp/";
-
 
 // Using velodyne cloud "ring" channel for image projection (other lidar may have different name for this channel, change "PointXYZIR" below)
 extern const bool useCloudRing = true; // if true, ang_res_y and ang_bottom are not used
@@ -133,11 +129,11 @@ extern const float nearestFeatureSearchSqDist = 25;
 extern const float surroundingKeyframeSearchRadius = 50.0; // key frame that is within n meters from current pose will be considerd for scan-to-map optimization (when loop closure disabled)
 extern const int   surroundingKeyframeSearchNum = 50; // submap size (when loop closure enabled)
 // history key frames (history submap for loop closure)
-extern const float historyKeyframeSearchRadius = 10.0; // key frame that is within n meters from current pose will be considerd for loop closure
+extern const float historyKeyframeSearchRadius = 7.0; // key frame that is within n meters from current pose will be considerd for loop closure
 extern const int   historyKeyframeSearchNum = 25; // 2n+1 number of hostory key frames will be fused into a submap for loop closure
 extern const float historyKeyframeFitnessScore = 0.3; // the smaller the better alignment
 
-extern const float globalMapVisualizationSearchRadius = 3000.0; // key frames with in n meters will be visualized
+extern const float globalMapVisualizationSearchRadius = 500.0; // key frames with in n meters will be visualized
 
 
 struct smoothness_t{ 
@@ -186,7 +182,7 @@ POINT_CLOUD_REGISTER_POINT_STRUCT (PointXYZIRPYT,
                                    (float, x, x) (float, y, y)
                                    (float, z, z) (float, intensity, intensity)
                                    (float, roll, roll) (float, pitch, pitch) (float, yaw, yaw)
-                                  (double, time, time)
+                                   (double, time, time)
 )
 
 typedef PointXYZIRPYT  PointTypePose;

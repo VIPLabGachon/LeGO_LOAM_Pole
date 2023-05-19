@@ -50,6 +50,9 @@ private:
     ros::Publisher pubSurfPointsFlat;
     ros::Publisher pubSurfPointsLessFlat;
 
+    ros::Publisher pubPoleCloud;
+    ros::Publisher pubSegmentedCloudCopy;
+
     pcl::PointCloud<PointType>::Ptr segmentedCloud;
     pcl::PointCloud<PointType>::Ptr outlierCloud;
 
@@ -60,6 +63,9 @@ private:
 
     pcl::PointCloud<PointType>::Ptr surfPointsLessFlatScan;
     pcl::PointCloud<PointType>::Ptr surfPointsLessFlatScanDS;
+
+    pcl::PointCloud<PointType>::Ptr poleCloud; // pole point
+    pcl::PointCloud<PointType>::Ptr segmentedCloudCopy;
 
     pcl::VoxelGrid<PointType> downSizeFilter;
 
@@ -78,7 +84,15 @@ private:
     int systemInitCount;
     bool systemInited;
 
+    const int labelMax = 1500;
     std::vector<smoothness_t> cloudSmoothness;
+    std::vector<int16_t> labeledPointHeightMax;
+    std::vector<int16_t> labeledPointHeightMin;
+    std::vector<int16_t> labeledPointWidthMax;
+    std::vector<int16_t> labeledPointWidthMin;
+
+    std::vector<bool> poleLabel;
+
     float *cloudCurvature;
     int *cloudNeighborPicked;
     int *cloudLabel;
@@ -201,6 +215,9 @@ public:
         pubLaserCloudSurfLast = nh.advertise<sensor_msgs::PointCloud2>("/laser_cloud_surf_last", 2);
         pubOutlierCloudLast = nh.advertise<sensor_msgs::PointCloud2>("/outlier_cloud_last", 2);
         pubLaserOdometry = nh.advertise<nav_msgs::Odometry> ("/laser_odom_to_init", 5);
+
+        pubPoleCloud = nh.advertise<sensor_msgs::PointCloud2>("/laser_cloud_pole", 1);
+        pubSegmentedCloudCopy = nh.advertise<sensor_msgs::PointCloud2>("/segmented_cloud_copy", 1);
         
         initializationValue();
     }
@@ -221,6 +238,12 @@ public:
         pointSearchSurfInd3 = new float[N_SCAN*Horizon_SCAN];
 
         cloudSmoothness.resize(N_SCAN*Horizon_SCAN);
+        labeledPointHeightMax.resize(labelMax);
+        labeledPointHeightMin.resize(labelMax);
+        labeledPointWidthMin.resize(labelMax);
+        labeledPointWidthMin.resize(labelMax);
+
+        poleLabel.resize(N_SCAN*Horizon_SCAN);
 
         downSizeFilter.setLeafSize(0.2, 0.2, 0.2);
 
@@ -234,6 +257,9 @@ public:
 
         surfPointsLessFlatScan.reset(new pcl::PointCloud<PointType>());
         surfPointsLessFlatScanDS.reset(new pcl::PointCloud<PointType>());
+
+        poleCloud.reset(new pcl::PointCloud<PointType>());
+        segmentedCloudCopy.reset(new pcl::PointCloud<PointType>());
 
         timeScanCur = 0;
         timeNewSegmentedCloud = 0;
@@ -302,10 +328,10 @@ public:
         kdtreeCornerLast.reset(new pcl::KdTreeFLANN<PointType>());
         kdtreeSurfLast.reset(new pcl::KdTreeFLANN<PointType>());
 
-        laserOdometry.header.frame_id = "/camera_init";
+        laserOdometry.header.frame_id = "camera_init";
         laserOdometry.child_frame_id = "/laser_odom";
 
-        laserOdometryTrans.frame_id_ = "/camera_init";
+        laserOdometryTrans.frame_id_ = "camera_init";
         laserOdometryTrans.child_frame_id_ = "/laser_odom";
         
         isDegenerate = false;
@@ -621,7 +647,7 @@ public:
     void calculateSmoothness()
     {
         int cloudSize = segmentedCloud->points.size();
-        for (int i = 5; i < cloudSize - 5; i++) {
+        for (int i = 3; i < cloudSize - 3; i++) {
 
             float diffRange = segInfo.segmentedCloudRange[i-5] + segInfo.segmentedCloudRange[i-4]
                             + segInfo.segmentedCloudRange[i-3] + segInfo.segmentedCloudRange[i-2]
@@ -677,12 +703,106 @@ public:
         }
     }
 
+    // Height, width를 이용해서 pole를 추출
+    void labelPolePoint() {
+        poleCloud->clear();
+        segmentedCloudCopy->clear();
+        
+        int pointSize = segmentedCloud->points.size();
+        int pointLabel = 0;
+        
+        float zDiff = 0.0;
+        labeledPointHeightMax.assign(labelMax, -2); 
+        labeledPointHeightMin.assign(labelMax, -2); 
+        labeledPointWidthMax.assign(labelMax, -2);
+        labeledPointWidthMin.assign(labelMax, -2);
+        PointType tmpPoint;
+
+        float widthMax = 0.0;
+        float widthMin = 0.0;
+
+        // 높이 min, max 인덱스를 저장
+        for (int i = 1; i < pointSize; i++) {
+            pointLabel = segInfo.segmentedCloudLabel[i];
+                if (pointLabel > 0 && pointLabel < 2000){
+                    if (labeledPointHeightMax[pointLabel] == -2) {
+                        // 높이의 최대값
+                        labeledPointHeightMax[pointLabel] = i;
+                        labeledPointHeightMin[pointLabel] = i;
+                    } 
+                    else {
+                        labeledPointHeightMin[pointLabel] = i;
+                    }
+
+            }
+        }
+
+        // width min max
+        // for (int i = 0; i < N_SCAN; i++) {
+        //     for (int i = segInfo.startRingIndex[i]; i < segInfo.endRingIndex[i]; i++) {
+        //         pointLabel = segInfo.segmentedCloudLabel[i];
+        //         if (pointLabel > 0 && pointLabel < 2000){
+        //             if (labeledPointHeightMax[pointLabel] == -2) {
+        //                 // 높이의 최대값
+        //                 labeledPointHeightMax[pointLabel] = i;
+        //                 labeledPointHeightMin[pointLabel] = i;
+        //             } 
+        //             else {
+        //                 labeledPointHeightMin[pointLabel] = i;
+        //             }
+
+        //     }
+        //     }
+
+        // }
+
+
+        // 같은 label인 point 높이, 너비 계산
+        // pole 선별
+        for (int i = 0; i < labelMax; i++) {
+            if (labeledPointHeightMax[i] == -2){
+                continue;
+                } 
+            else {
+                zDiff = segmentedCloud->points[labeledPointHeightMax[i]].y - segmentedCloud->points[labeledPointHeightMin[i]].y;
+                if (zDiff > 0.05) {
+                    poleLabel[i] = true; // pole
+                    
+                }
+                else {
+                    poleLabel[i] = false; // not pole
+                }
+                cout <<  poleLabel[i] << endl;
+            }
+        }
+
+        for (int i = 1; i < pointSize; i++) {
+            pointLabel = segInfo.segmentedCloudLabel[i];
+            if (pointLabel > 0) {
+                // cout << pointLabel << endl;
+                // cout <<poleLabel[pointLabel] << endl;
+                if (poleLabel[pointLabel] && cloudCurvature[i] > 1000.0) {
+                    tmpPoint = segmentedCloud->points[i];
+                    cout << segmentedCloud->points[i]  << endl;
+                    poleCloud->push_back(segmentedCloud->points[i]);
+                    // push_back(segmentedCloud->points[ind]);
+                }
+            }
+        }
+    }
+
     void extractFeatures()
     {
+        poleCloud->clear();
+        segmentedCloudCopy->clear();
         cornerPointsSharp->clear();
         cornerPointsLessSharp->clear();
         surfPointsFlat->clear();
         surfPointsLessFlat->clear();
+        // poleCloud->push_back(segmentedCloud->points[1000]);
+        // labelPolePoint();
+
+        // poleCloud->push_back(segmentedCloud->points[100]);
 
         for (int i = 0; i < N_SCAN; i++) {
 
@@ -790,33 +910,45 @@ public:
 	    if (pubCornerPointsSharp.getNumSubscribers() != 0){
 	        pcl::toROSMsg(*cornerPointsSharp, laserCloudOutMsg);
 	        laserCloudOutMsg.header.stamp = cloudHeader.stamp;
-	        laserCloudOutMsg.header.frame_id = "/camera";
+	        laserCloudOutMsg.header.frame_id = "camera";
 	        pubCornerPointsSharp.publish(laserCloudOutMsg);
 	    }
 
 	    if (pubCornerPointsLessSharp.getNumSubscribers() != 0){
 	        pcl::toROSMsg(*cornerPointsLessSharp, laserCloudOutMsg);
 	        laserCloudOutMsg.header.stamp = cloudHeader.stamp;
-	        laserCloudOutMsg.header.frame_id = "/camera";
+	        laserCloudOutMsg.header.frame_id = "camera";
 	        pubCornerPointsLessSharp.publish(laserCloudOutMsg);
 	    }
 
 	    if (pubSurfPointsFlat.getNumSubscribers() != 0){
 	        pcl::toROSMsg(*surfPointsFlat, laserCloudOutMsg);
 	        laserCloudOutMsg.header.stamp = cloudHeader.stamp;
-	        laserCloudOutMsg.header.frame_id = "/camera";
+	        laserCloudOutMsg.header.frame_id = "camera";
 	        pubSurfPointsFlat.publish(laserCloudOutMsg);
 	    }
 
 	    if (pubSurfPointsLessFlat.getNumSubscribers() != 0){
 	        pcl::toROSMsg(*surfPointsLessFlat, laserCloudOutMsg);
 	        laserCloudOutMsg.header.stamp = cloudHeader.stamp;
-	        laserCloudOutMsg.header.frame_id = "/camera";
+	        laserCloudOutMsg.header.frame_id = "camera";
 	        pubSurfPointsLessFlat.publish(laserCloudOutMsg);
 	    }
+
+        if (pubPoleCloud.getNumSubscribers() != 0){
+	        pcl::toROSMsg(*poleCloud, laserCloudOutMsg);
+	        laserCloudOutMsg.header.stamp = cloudHeader.stamp;
+	        laserCloudOutMsg.header.frame_id = "camera";
+	        pubPoleCloud.publish(laserCloudOutMsg);
+	    }
+
+        if (pubSegmentedCloudCopy.getNumSubscribers() != 0){
+	        pcl::toROSMsg(*segmentedCloudCopy, laserCloudOutMsg);
+	        laserCloudOutMsg.header.stamp = cloudHeader.stamp;
+	        laserCloudOutMsg.header.frame_id = "camera";
+	        pubSegmentedCloudCopy.publish(laserCloudOutMsg);
+	    }
     }
-
-
 
 
 
@@ -1621,13 +1753,13 @@ public:
         sensor_msgs::PointCloud2 laserCloudCornerLast2;
         pcl::toROSMsg(*laserCloudCornerLast, laserCloudCornerLast2);
         laserCloudCornerLast2.header.stamp = cloudHeader.stamp;
-        laserCloudCornerLast2.header.frame_id = "/camera";
+        laserCloudCornerLast2.header.frame_id = "camera";
         pubLaserCloudCornerLast.publish(laserCloudCornerLast2);
 
         sensor_msgs::PointCloud2 laserCloudSurfLast2;
         pcl::toROSMsg(*laserCloudSurfLast, laserCloudSurfLast2);
         laserCloudSurfLast2.header.stamp = cloudHeader.stamp;
-        laserCloudSurfLast2.header.frame_id = "/camera";
+        laserCloudSurfLast2.header.frame_id = "camera";
         pubLaserCloudSurfLast.publish(laserCloudSurfLast2);
 
         transformSum[0] += imuPitchStart;
@@ -1797,19 +1929,19 @@ public:
             sensor_msgs::PointCloud2 outlierCloudLast2;
             pcl::toROSMsg(*outlierCloud, outlierCloudLast2);
             outlierCloudLast2.header.stamp = cloudHeader.stamp;
-            outlierCloudLast2.header.frame_id = "/camera";
+            outlierCloudLast2.header.frame_id = "camera";
             pubOutlierCloudLast.publish(outlierCloudLast2);
 
             sensor_msgs::PointCloud2 laserCloudCornerLast2;
             pcl::toROSMsg(*laserCloudCornerLast, laserCloudCornerLast2);
             laserCloudCornerLast2.header.stamp = cloudHeader.stamp;
-            laserCloudCornerLast2.header.frame_id = "/camera";
+            laserCloudCornerLast2.header.frame_id = "camera";
             pubLaserCloudCornerLast.publish(laserCloudCornerLast2);
 
             sensor_msgs::PointCloud2 laserCloudSurfLast2;
             pcl::toROSMsg(*laserCloudSurfLast, laserCloudSurfLast2);
             laserCloudSurfLast2.header.stamp = cloudHeader.stamp;
-            laserCloudSurfLast2.header.frame_id = "/camera";
+            laserCloudSurfLast2.header.frame_id = "camera";
             pubLaserCloudSurfLast.publish(laserCloudSurfLast2);
         }
     }
@@ -1837,6 +1969,8 @@ public:
         markOccludedPoints();
 
         extractFeatures();
+
+        labelPolePoint();
 
         publishCloud(); // cloud for visualization
 	
