@@ -721,10 +721,10 @@ public:
         float widthMax = 0.0;
         float widthMin = 0.0;
 
-        // 높이 min, max 인덱스를 저장
-        for (int i = 1; i < pointSize; i++) {
+        // Height min, max 인덱스를 저장
+        for (int i = 0; i < pointSize; i++) {
             pointLabel = segInfo.segmentedCloudLabel[i];
-                if (pointLabel > 0 && pointLabel < 2000){
+                if (pointLabel > 0 && pointLabel < 2000) {
                     if (labeledPointHeightMax[pointLabel] == -2) {
                         // 높이의 최대값
                         labeledPointHeightMax[pointLabel] = i;
@@ -736,59 +736,99 @@ public:
 
             }
         }
+        
+        // Width min max 인덱스를 저장
+        for (int i = 0; i < pointSize; i++) {
+            pointLabel = segInfo.segmentedCloudLabel[i];
+            if (pointLabel > 0 && pointLabel < 2000) {
+                if (labeledPointWidthMax[pointLabel] == -2) {
+                    // 높이의 최대값
+                    labeledPointWidthMax[pointLabel] = i;
+                    labeledPointWidthMin[pointLabel] = i;
+                } 
+                else if (labeledPointWidthMin[pointLabel] == labeledPointWidthMax[pointLabel] ||
+                        i - labeledPointWidthMin[pointLabel] < 4) {
+                    labeledPointWidthMin[pointLabel] = i;
+                }
+            }
+        }
 
-        // width min max
-        // for (int i = 0; i < N_SCAN; i++) {
-        //     for (int i = segInfo.startRingIndex[i]; i < segInfo.endRingIndex[i]; i++) {
-        //         pointLabel = segInfo.segmentedCloudLabel[i];
-        //         if (pointLabel > 0 && pointLabel < 2000){
-        //             if (labeledPointHeightMax[pointLabel] == -2) {
-        //                 // 높이의 최대값
-        //                 labeledPointHeightMax[pointLabel] = i;
-        //                 labeledPointHeightMin[pointLabel] = i;
-        //             } 
-        //             else {
-        //                 labeledPointHeightMin[pointLabel] = i;
-        //             }
 
-        //     }
-        //     }
+        // cout << pointSize << endl;
 
+        segmentedCloud->points[labeledPointWidthMax[100]].intensity = 5000;
+        segmentedCloud->points[labeledPointWidthMin[100]].intensity = 10000;
+        
+        // for (int j = 0; j < N_SCAN; j++) {
+        //     cout << segInfo.startRingIndex[j]-4 << endl;
+        //     cout << segInfo.endRingIndex[j]+6 << endl;
         // }
 
+        cout << segInfo.segmentedCloudLabel[labeledPointWidthMin[100]] << endl;
+        cout << segInfo.segmentedCloudLabel[labeledPointWidthMax[100]] << endl;
+        cout << labeledPointWidthMin[100] << endl;
+        cout << labeledPointWidthMax[100] << endl;
+        
+        // cout << segInfo.startRingIndex[0] << endl;
+        // cout << segInfo.endRingIndex[0] << endl;
+        // cout << segInfo.startRingIndex[40] << endl;
+        // cout << segInfo.endRingIndex[40] << endl;
 
-        // 같은 label인 point 높이, 너비 계산
-        // pole 선별
-        for (int i = 0; i < labelMax; i++) {
-            if (labeledPointHeightMax[i] == -2){
-                continue;
-                } 
-            else {
-                zDiff = segmentedCloud->points[labeledPointHeightMax[i]].y - segmentedCloud->points[labeledPointHeightMin[i]].y;
-                if (zDiff > 0.05) {
-                    poleLabel[i] = true; // pole
+
+        int count = 0;
+        for (int i = 0; i < pointSize; i++) {
+
+            if (segInfo.segmentedCloudLabel[i] == 100) {
+                
+               
+                poleCloud->push_back(segmentedCloud->points[i]);
+                
+                // if (count > 1) {
+                //     pole_point->points[count].intensity = 9999;
+                // pole_point->points[count].intensity = 4000;
+                // } 
+                // else {
+                //     pole_point->points[0].intensity = 1;
+                // }
+                // count++;
+
+            }
+
+        }
+
+
+        // // 같은 label인 point 높이, 너비 계산
+        // // pole 선별
+        // for (int i = 0; i < labelMax; i++) {
+        //     if (labeledPointHeightMax[i] == -2){
+        //         continue;
+        //         } 
+        //     else {
+        //         zDiff = segmentedCloud->points[labeledPointHeightMax[i]].y - segmentedCloud->points[labeledPointHeightMin[i]].y;
+        //         if (zDiff > 0.05) {
+        //             poleLabel[i] = true; // pole
                     
-                }
-                else {
-                    poleLabel[i] = false; // not pole
-                }
-                cout <<  poleLabel[i] << endl;
-            }
-        }
+        //         }
+        //         else {
+        //             poleLabel[i] = false; // not pole
+        //         }
+        //         cout <<  poleLabel[i] << endl;
+        //     }
+        // }
 
-        for (int i = 1; i < pointSize; i++) {
-            pointLabel = segInfo.segmentedCloudLabel[i];
-            if (pointLabel > 0) {
-                // cout << pointLabel << endl;
-                // cout <<poleLabel[pointLabel] << endl;
-                if (poleLabel[pointLabel] && cloudCurvature[i] > 1000.0) {
-                    tmpPoint = segmentedCloud->points[i];
-                    cout << segmentedCloud->points[i]  << endl;
-                    poleCloud->push_back(segmentedCloud->points[i]);
-                    // push_back(segmentedCloud->points[ind]);
-                }
-            }
-        }
+        // for (int i = 1; i < pointSize; i++) {
+        //     pointLabel = segInfo.segmentedCloudLabel[i];
+        //     if (pointLabel > 0) {
+        //         // cout << pointLabel << endl;
+        //         // cout <<poleLabel[pointLabel] << endl;
+        //         if (poleLabel[pointLabel] && cloudCurvature[i] > 1000.0) {
+        //             tmpPoint = segmentedCloud->points[i];
+        //             cout << segmentedCloud->points[i]  << endl;
+        //             poleCloud->push_back(segmentedCloud->points[i]);
+        //             // push_back(segmentedCloud->points[ind]);
+        //         }
+        //     }
+        // }
     }
 
     void extractFeatures()
@@ -812,6 +852,8 @@ public:
 
                 int sp = (segInfo.startRingIndex[i] * (6 - j)    + segInfo.endRingIndex[i] * j) / 6;
                 int ep = (segInfo.startRingIndex[i] * (5 - j)    + segInfo.endRingIndex[i] * (j + 1)) / 6 - 1;
+                // cout << sp << endl;
+                // cout << ep << endl;
 
                 if (sp >= ep)
                     continue;

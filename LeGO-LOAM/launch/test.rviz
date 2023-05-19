@@ -22,7 +22,7 @@ Panels:
   - Class: rviz/Time
     Name: Time
     SyncMode: 0
-    SyncSource: Edge Features (green)
+    SyncSource: Pole Cloud
   - Class: rviz/Help
     Name: Help
 Preferences:
@@ -507,9 +507,9 @@ Visualization Manager:
       Position Transformer: XYZ
       Queue Size: 10
       Selectable: true
-      Size (Pixels): 3
+      Size (Pixels): 20
       Size (m): 0.009999999776482582
-      Style: Flat Squares
+      Style: Points
       Topic: /laser_cloud_pole
       Unreliable: false
       Use Fixed Frame: true
@@ -531,7 +531,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 86.48741912841797
+      Distance: 31.38779640197754
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -539,17 +539,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0
-        Y: 0
-        Z: 0
+        X: -5.854320526123047
+        Y: -5.3995361328125
+        Z: -6.887909889221191
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.2647966146469116
+      Pitch: 0.3747970163822174
       Target Frame: base_link
-      Yaw: 6.128697395324707
+      Yaw: 2.075512647628784
     Saved: ~
 Window Geometry:
   Displays:
@@ -570,4 +570,4 @@ Window Geometry:
     collapsed: true
   Width: 1920
   X: 637
-  Y: 153
+  Y: 42
