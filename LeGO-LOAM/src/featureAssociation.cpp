@@ -827,35 +827,15 @@ public:
         // }
 
 
-        // // 같은 label인 point 높이, 너비 계산
-        // // pole 선별
-        // for (int i = 0; i < labelMax; i++) {
-        //     if (labeledPointHeightMax[i] == -2){
-        //         continue;
-        //         } 
-        //     else {
-        //         Height = segmentedCloud->points[labeledPointHeightMax[i]].y - segmentedCloud->points[labeledPointHeightMin[i]].y;
-        //         if (Height > 0.05) {
-        //             poleLabel[i] = true; // pole
-                    
-        //         }
-        //         else {
-        //             poleLabel[i] = false; // not pole
-        //         }
-        //         cout <<  poleLabel[i] << endl;
-        //     }
-        // }
-
         for (int i = 1; i < pointSize; i++) {
             pointLabel = segInfo.segmentedCloudLabel[i];
-            if (pointLabel > 0 && pointLabel < 2000) {
-                // cout << pointLabel << endl;
-                // cout <<poleLabel[pointLabel] << endl;
-                if (poleLabel[pointLabel] /*&& cloudCurvature[i] > 1000.0*/) {
+    
+            if (pointLabel > 0) {
+                if (poleLabel[pointLabel] && cloudCurvature[i] > 500.0 && segInfo.segmentedCloudGroundFlag[i] == false)  {
                     tmpPoint = segmentedCloud->points[i];
-                    // cout << segmentedCloud->points[i]  << endl;
-                    poleCloud->push_back(segmentedCloud->points[i]);
-                    // push_back(segmentedCloud->points[ind]);
+                    poleCloud->push_back(tmpPoint);
+                    // cornerPointsSharp->push_back(tmpPoint);
+                    // cornerPointsLessSharp->push_back(tmpPoint);
                 }
             }
         }
@@ -869,10 +849,7 @@ public:
         cornerPointsLessSharp->clear();
         surfPointsFlat->clear();
         surfPointsLessFlat->clear();
-        // poleCloud->push_back(segmentedCloud->points[1000]);
-        // labelPolePoint();
 
-        // poleCloud->push_back(segmentedCloud->points[100]);
 
         for (int i = 0; i < N_SCAN; i++) {
 
@@ -882,8 +859,6 @@ public:
 
                 int sp = (segInfo.startRingIndex[i] * (6 - j)    + segInfo.endRingIndex[i] * j) / 6;
                 int ep = (segInfo.startRingIndex[i] * (5 - j)    + segInfo.endRingIndex[i] * (j + 1)) / 6 - 1;
-                // cout << sp << endl;
-                // cout << ep << endl;
 
                 if (sp >= ep)
                     continue;
@@ -1021,39 +996,6 @@ public:
 	        pubSegmentedCloudCopy.publish(laserCloudOutMsg);
 	    }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -2042,7 +1984,7 @@ public:
 
         extractFeatures();
 
-        labelPolePoint();
+        // labelPolePoint();
 
         publishCloud(); // cloud for visualization
 	

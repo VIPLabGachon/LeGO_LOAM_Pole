@@ -6,7 +6,7 @@ Panels:
       Expanded:
         - /TF1/Frames1
         - /Pole Cloud1
-      Splitter Ratio: 0.7039999961853027
+      Splitter Ratio: 0.7146666646003723
     Tree Height: 1054
   - Class: rviz/Selection
     Name: Selection
@@ -70,8 +70,8 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 17.005943298339844
-        Min Value: -1.0478858947753906
+        Max Value: 34.331668853759766
+        Min Value: -0.9648313522338867
         Value: true
       Axis: Z
       Channel Name: intensity
@@ -406,8 +406,8 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 23.08336067199707
-        Min Value: -3.9826507568359375
+        Max Value: 33.134220123291016
+        Min Value: -11.261058807373047
         Value: true
       Axis: Y
       Channel Name: intensity
@@ -415,7 +415,7 @@ Visualization Manager:
       Color: 255; 255; 255
       Color Transformer: AxisColor
       Decay Time: 0
-      Enabled: false
+      Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Min Color: 0; 0; 0
@@ -430,7 +430,7 @@ Visualization Manager:
       Unreliable: false
       Use Fixed Frame: false
       Use rainbow: false
-      Value: false
+      Value: true
     - Alpha: 0.5
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -531,7 +531,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 43.63492965698242
+      Distance: 68.66040802001953
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -547,9 +547,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.9603980183601379
+      Pitch: 0.45539823174476624
       Target Frame: base_link
-      Yaw: 1.5753976106643677
+      Yaw: 3.0903985500335693
     Saved: ~
 Window Geometry:
   Displays:

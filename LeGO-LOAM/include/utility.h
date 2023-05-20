@@ -133,7 +133,7 @@ extern const float historyKeyframeSearchRadius = 7.0; // key frame that is withi
 extern const int   historyKeyframeSearchNum = 25; // 2n+1 number of hostory key frames will be fused into a submap for loop closure
 extern const float historyKeyframeFitnessScore = 0.3; // the smaller the better alignment
 
-extern const float globalMapVisualizationSearchRadius = 500.0; // key frames with in n meters will be visualized
+extern const float globalMapVisualizationSearchRadius = 5000.0; // key frames with in n meters will be visualized
 
 
 struct smoothness_t{ 
