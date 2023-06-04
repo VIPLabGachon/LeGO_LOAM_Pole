@@ -1,0 +1,1 @@
+/usr/bin/g++ -fPIC  -lboost_system -DGTSAM_USE_SYSTEM_EIGEN=ON -g  -shared -Wl,-soname,libgmockd.so -o ../lib/libgmockd.so CMakeFiles/gmock.dir/src/gmock-all.cc.o  -Wl,-rpath,/home/ubuntu/catkin_ws/src/LeGO_LOAM_Pole/build/gtest/lib ../lib/libgtestd.so -lpthread 
